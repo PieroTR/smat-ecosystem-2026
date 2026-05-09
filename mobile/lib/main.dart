@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'services/api_service.dart';
-import 'models/estacion.dart';
+import 'screens/login_screen.dart';
+import 'screens/home_page.dart';
+import 'services/auth_service.dart';
 
 void main() => runApp(const SMATApp());
 
@@ -10,67 +11,23 @@ class SMATApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: const HomePage(), 
-      debugShowCheckedModeBanner: false
-    );
-  }
-}
-
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
-
-  @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  // Esta variable guarda la lista de estaciones
-  late Future<List<Estacion>> futureEstaciones;
-
-  @override
-  void initState() {
-    super.initState();
-    // Carga inicial al abrir la app
-    futureEstaciones = ApiService().fetchEstaciones();
-  }
-
-  // ESTA ES LA FUNCIÓN DEL RETO: Vuelve a llamar a la API y refresca la pantalla
-  void refrescarDatos() {
-    setState(() {
-      futureEstaciones = ApiService().fetchEstaciones();
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('SMAT - Monitoreo Móvil')),
-      body: FutureBuilder<List<Estacion>>(
-        future: futureEstaciones,
+      debugShowCheckedModeBanner: false,
+      title: 'SMAT Mobile',
+      home: FutureBuilder<String?>(
+        future: AuthService().getToken(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return const Center(child: Text('❌ Error de conexión'));
-          } else {
-            return ListView.builder(
-              itemCount: snapshot.data!.length,
-              itemBuilder: (context, index) {
-                final est = snapshot.data![index];
-                return ListTile(
-                  leading: const Icon(Icons.satellite_alt),
-                  title: Text(est.nombre),
-                  subtitle: Text(est.ubicacion),
-                );
-              },
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
             );
           }
+          
+          // ¡AQUÍ ESTÁ LA MAGIA! Cero palabras "const" en las siguientes líneas:
+          if (snapshot.hasData && snapshot.data != null) {
+            return HomePage(); 
+          }
+          return LoginScreen(); 
         },
-      ),
-      // AQUÍ ESTÁ EL BOTÓN QUE PIDE EL RETO
-      floatingActionButton: FloatingActionButton(
-        onPressed: refrescarDatos, // Al presionar, ejecuta la función de refresco
-        child: const Icon(Icons.refresh),
       ),
     );
   }
