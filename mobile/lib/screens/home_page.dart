@@ -26,7 +26,54 @@ class _HomePageState extends State<HomePage> {
       futureEstaciones = apiService.fetchEstaciones();
     });
   }
+  void _mostrarDialogoCreacion() {
+    final nombreCtrl = TextEditingController();
+    final ubicacionCtrl = TextEditingController();
 
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Nueva Estación"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nombreCtrl,
+              decoration: const InputDecoration(labelText: "Nombre"),
+            ),
+            TextField(
+              controller: ubicacionCtrl,
+              decoration: const InputDecoration(labelText: "Ubicación"),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancelar"),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              // Llamamos al método crear que ya tienes en ApiService
+              bool ok = await apiService.crearEstacion(
+                nombreCtrl.text,
+                ubicacionCtrl.text,
+              );
+              if (ok) {
+                if (!mounted) return;
+                Navigator.pop(context);
+                refrescarDatos();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Estación creada con éxito")),
+                );
+              }
+            },
+            child: const Text("Crear"),
+          ),
+        ],
+      ),
+    );
+  }
   void _mostrarDialogoEdicion(Estacion estacion) {
     final nombreCtrl = TextEditingController(text: estacion.nombre);
     final ubicacionCtrl = TextEditingController(text: estacion.ubicacion);
@@ -95,6 +142,11 @@ class _HomePageState extends State<HomePage> {
             },
           )
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _mostrarDialogoCreacion,
+        backgroundColor: Colors.blueAccent,
+        child: const Icon(Icons.add, color: Colors.white),
       ),
       body: RefreshIndicator(
         onRefresh: refrescarDatos,

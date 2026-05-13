@@ -41,3 +41,28 @@ def registrar_lectura(lectura: schemas.LecturaCreate, db: Session = Depends(data
     db.add(nueva_lectura)
     db.commit()
     return {"status": "Lectura registrada con éxito"}
+# === NUEVAS RUTAS LABORATORIO 6.2 (CRUD COMPLETO) ===
+
+@app.put("/estaciones/{id}/", tags=["SMAT"])
+def editar_estacion(id: int, estacion_update: schemas.EstacionCreate, db: Session = Depends(database.get_db), user=Depends(auth.validar_token)):
+    estacion = db.query(models.EstacionDB).filter(models.EstacionDB.id == id).first()
+    if not estacion:
+        raise HTTPException(status_code=404, detail="Estación no encontrada")
+    
+    # Actualizamos los campos
+    estacion.nombre = estacion_update.nombre
+    estacion.ubicacion = estacion_update.ubicacion
+    
+    db.commit()
+    db.refresh(estacion)
+    return estacion
+
+@app.delete("/estaciones/{id}/", tags=["SMAT"])
+def eliminar_estacion(id: int, db: Session = Depends(database.get_db), user=Depends(auth.validar_token)):
+    estacion = db.query(models.EstacionDB).filter(models.EstacionDB.id == id).first()
+    if not estacion:
+        raise HTTPException(status_code=404, detail="Estación no encontrada")
+    
+    db.delete(estacion)
+    db.commit()
+    return {"detail": "Estación eliminada correctamente"}
