@@ -11,6 +11,8 @@ class EstacionCreate(EstacionBase):
 
 class Estacion(EstacionBase):
     id: int
+    # --- RETO SEMANA 9: Campo dinámico necesario para enviar la telemetría a Flutter ---
+    ultimoValor: float = 0.0  
 
     class Config:
         from_attributes = True

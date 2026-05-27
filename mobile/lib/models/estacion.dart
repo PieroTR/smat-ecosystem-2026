@@ -2,7 +2,7 @@ class Estacion {
   final int id;
   final String nombre;
   final String ubicacion;
-  final double ultimoValor; // Añadimos este campo para el reto [cite: 123]
+  final double ultimoValor; // Añadimos este campo para el reto
 
   Estacion({
     required this.id, 
@@ -16,8 +16,7 @@ class Estacion {
       id: json['id'],
       nombre: json['nombre'],
       ubicacion: json['ubicacion'],
-      // Usamos .toDouble() para evitar errores si el JSON trae un entero
-      ultimoValor: (json['ultimo_valor'] ?? 0.0).toDouble(), 
+      ultimoValor: (json['ultimoValor'] ?? 0.0).toDouble(), 
     );
   }
 }

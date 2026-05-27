@@ -1,3 +1,4 @@
+import 'dart:async'; // Necesario para usar el Timer
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../models/estacion.dart';
@@ -14,18 +15,34 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late Future<List<Estacion>> futureEstaciones;
   final ApiService apiService = ApiService();
+  Timer? _timer; // <-- Guardamos la referencia del Timer para poder destruirlo después
 
   @override
   void initState() {
     super.initState();
     futureEstaciones = apiService.fetchEstaciones();
+
+    // --- AUTOMATIZACIÓN: Refresca la pantalla automáticamente cada 3 segundos ---
+    _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      refrescarDatos();
+    });
+  }
+
+  @override
+  void dispose() {
+    // --- BUENA PRÁCTICA: Cancelamos el timer cuando salgamos de esta pantalla ---
+    _timer?.cancel();
+    super.dispose();
   }
 
   Future<void> refrescarDatos() async {
+    // Verificamos si el widget sigue montado antes de actualizar el estado
+    if (!mounted) return;
     setState(() {
       futureEstaciones = apiService.fetchEstaciones();
     });
   }
+
   void _mostrarDialogoCreacion() {
     final nombreCtrl = TextEditingController();
     final ubicacionCtrl = TextEditingController();
@@ -54,7 +71,6 @@ class _HomePageState extends State<HomePage> {
           ),
           ElevatedButton(
             onPressed: () async {
-              // Llamamos al método crear que ya tienes en ApiService
               bool ok = await apiService.crearEstacion(
                 nombreCtrl.text,
                 ubicacionCtrl.text,
@@ -74,6 +90,7 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+
   void _mostrarDialogoEdicion(Estacion estacion) {
     final nombreCtrl = TextEditingController(text: estacion.nombre);
     final ubicacionCtrl = TextEditingController(text: estacion.ubicacion);
@@ -153,10 +170,9 @@ class _HomePageState extends State<HomePage> {
         child: FutureBuilder<List<Estacion>>(
           future: futureEstaciones,
           builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
+            if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
               return const Center(child: CircularProgressIndicator());
             } else if (snapshot.hasError) {
-              // Resiliencia Lab 7.1: Botón para reintentar si falla la red
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -201,14 +217,31 @@ class _HomePageState extends State<HomePage> {
                         );
                       }
                     },
-                    child: ListTile(
-                      leading: Icon(
-                        Icons.satellite_alt,
-                        color: (est.ultimoValor > 50) ? Colors.red : Colors.green,
+                    child: Card(
+                      // --- RETO SEMANA 9: Fondo rojo suave si supera los 70.0 cm ---
+                      color: est.ultimoValor > 70.0
+                          ? Colors.red.shade50
+                          : Colors.white,
+                      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      child: ListTile(
+                        leading: Icon(
+                          Icons.satellite_alt,
+                          color: est.ultimoValor > 70.0 ? Colors.red : Colors.green,
+                        ),
+                        title: Text(
+                          est.nombre,
+                          style: TextStyle(
+                            fontWeight: est.ultimoValor > 70.0 
+                                ? FontWeight.bold 
+                                : FontWeight.normal,
+                          ),
+                        ),
+                        subtitle: Text("${est.ubicacion} • Nivel: ${est.ultimoValor} cm"),
+                        trailing: est.ultimoValor > 70.0
+                            ? const Icon(Icons.warning, color: Colors.red)
+                            : null,
+                        onTap: () => _mostrarDialogoEdicion(est),
                       ),
-                      title: Text(est.nombre),
-                      subtitle: Text(est.ubicacion),
-                      onTap: () => _mostrarDialogoEdicion(est),
                     ),
                   );
                 },

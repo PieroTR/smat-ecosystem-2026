@@ -21,7 +21,31 @@ def login():
 
 @app.get("/estaciones/", response_model=list[schemas.Estacion], tags=["SMAT"])
 def listar_estaciones(db: Session = Depends(database.get_db)):
-    return db.query(models.EstacionDB).all()
+    # 1. Traemos todas las estaciones de la base de datos
+    estaciones_db = db.query(models.EstacionDB).all()
+    resultado = []
+    
+    for est in estaciones_db:
+        # 2. Buscamos la última telemetría guardada para esta estación
+        ultima_lectura = db.query(models.LecturaDB)\
+                           .filter(models.LecturaDB.estacion_id == est.id)\
+                           .order_by(models.LecturaDB.id.desc())\
+                           .first()
+        
+        # Si existe la lectura asignamos su valor, de lo contrario se queda en 0.0
+        valor_medido = ultima_lectura.valor if ultima_lectura else 0.0
+        
+        # 3. Mapeamos manualmente a un diccionario estructurado independiente de SQLAlchemy
+        est_mapeada = {
+            "id": est.id,
+            "nombre": est.nombre,
+            "ubicacion": est.ubicacion,
+            "ultimoValor": valor_medido  # Inyección forzada y limpia del valor real
+        }
+        resultado.append(est_mapeada)
+
+    # 4. Retornamos la lista mapeada que Pydantic validará perfectamente
+    return resultado
 
 @app.post("/estaciones/", tags=["SMAT"])
 def crear_estacion(estacion: schemas.EstacionCreate, db: Session = Depends(database.get_db), user=Depends(auth.validar_token)):
@@ -41,6 +65,7 @@ def registrar_lectura(lectura: schemas.LecturaCreate, db: Session = Depends(data
     db.add(nueva_lectura)
     db.commit()
     return {"status": "Lectura registrada con éxito"}
+
 # === NUEVAS RUTAS LABORATORIO 6.2 (CRUD COMPLETO) ===
 
 @app.put("/estaciones/{id}/", tags=["SMAT"])
