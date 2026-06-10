@@ -5,7 +5,7 @@ import requests
 # CONFIGURACIÓN
 API_URL = "http://localhost:8000/lecturas/"  # <-- CORREGIDO: Con barra al final
 ESTACION_ID = 1  # ID de la estación registrada en tu DB
-TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbl9maXNpIiwiZXhwIjoxNzc5ODk5NjEyfQ.dpSIJHuascM1HvBzUMA9CqhnsJFOHnY5MrUxJEcBsQg"
+TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbl9maXNpIiwiZXhwIjoxNzgxMTEyMzcyfQ.9TRcbQcXr7X93KfnJoBvvY5HGdIxqS2qjS22BqkC7u0"
 
 
 def leer_sensor_emulado():

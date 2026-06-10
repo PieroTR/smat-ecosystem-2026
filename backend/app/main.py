@@ -91,3 +91,17 @@ def eliminar_estacion(id: int, db: Session = Depends(database.get_db), user=Depe
     db.delete(estacion)
     db.commit()
     return {"detail": "Estación eliminada correctamente"}
+
+# === NUEVA RUTA LABORATORIO 11: HISTORIAL DE TELEMETRÍA ===
+
+@app.get("/lecturas/", response_model=list[schemas.Lectura], tags=["Telemetría"])
+def listar_lecturas(db: Session = Depends(database.get_db), user=Depends(auth.validar_token)):
+    """
+    Retorna el historial completo de todas las lecturas de telemetría guardadas en la base de datos.
+    Requiere un Token JWT de administrador válido.
+    """
+    # Consulta todas las lecturas registradas en SQLite
+    lecturas_db = db.query(models.LecturaDB).all()
+    
+    # Retornamos el listado que Pydantic validará con tu esquema 'schemas.Lectura'
+    return lecturas_db
